@@ -25,7 +25,7 @@ import (
 	"golang.org/x/sys/unix"
 	"gopkg.in/yaml.v2"
 
-	"github.com/pterodactyl/wings/system"
+	"vanes430/wings/system"
 )
 
 const DefaultLocation = "/etc/pterodactyl/config.yml"

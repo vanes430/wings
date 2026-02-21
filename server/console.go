@@ -7,8 +7,8 @@ import (
 
 	"github.com/mitchellh/colorstring"
 
-	"github.com/pterodactyl/wings/config"
-	"github.com/pterodactyl/wings/system"
+	"vanes430/wings/config"
+	"vanes430/wings/system"
 )
 
 // appName is a local cache variable to avoid having to make expensive copies of

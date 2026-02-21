@@ -6,7 +6,7 @@ import (
 
 	"github.com/franela/goblin"
 
-	"github.com/pterodactyl/wings/internal/progress"
+	"vanes430/wings/internal/progress"
 )
 
 func TestProgress(t *testing.T) {

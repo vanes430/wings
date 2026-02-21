@@ -15,7 +15,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
 
-	"github.com/pterodactyl/wings/config"
+	"vanes430/wings/config"
 )
 
 var (

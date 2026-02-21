@@ -6,8 +6,8 @@ import (
 
 	"emperror.dev/errors"
 
-	"github.com/pterodactyl/wings/internal/database"
-	"github.com/pterodactyl/wings/internal/models"
+	"vanes430/wings/internal/database"
+	"vanes430/wings/internal/models"
 )
 
 const ActivityPowerPrefix = "server:power."

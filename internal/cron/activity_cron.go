@@ -6,10 +6,10 @@ import (
 
 	"emperror.dev/errors"
 
-	"github.com/pterodactyl/wings/internal/database"
-	"github.com/pterodactyl/wings/internal/models"
-	"github.com/pterodactyl/wings/server"
-	"github.com/pterodactyl/wings/system"
+	"vanes430/wings/internal/database"
+	"vanes430/wings/internal/models"
+	"vanes430/wings/server"
+	"vanes430/wings/system"
 )
 
 type activityCron struct {

@@ -17,7 +17,7 @@ import (
 	"emperror.dev/errors"
 	"github.com/google/uuid"
 
-	"github.com/pterodactyl/wings/server"
+	"vanes430/wings/server"
 )
 
 var client *http.Client
@@ -59,17 +59,34 @@ func init() {
 
 		Transport: trnspt,
 
-		// Disallow any redirect on an HTTP call. This is a security requirement: do not modify
+		// Allow up to 10 redirects on an HTTP call. This is a security requirement: do not modify
 		// this logic without first ensuring that the new target location IS NOT within the current
 		// instance's local network.
-		//
-		// This specific error response just causes the client to not follow the redirect and
-		// returns the actual redirect response to the caller. Not perfect, but simple and most
-		// people won't be using URLs that redirect anyways hopefully?
-		//
-		// We'll re-evaluate this down the road if needed.
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
+			if len(via) >= 10 {
+				return errors.New("downloader: too many redirects")
+			}
+
+			// Ensure the redirect URL is not pointing to an internal network.
+			ipStr, _, err := net.SplitHostPort(req.URL.Host)
+			if err != nil {
+				// If SplitHostPort fails, it might just be a hostname without a port.
+				ipStr = req.URL.Hostname()
+			}
+
+			ip := net.ParseIP(ipStr)
+			if ip != nil {
+				if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsInterfaceLocalMulticast() {
+					return errors.WithStack(ErrInternalResolution)
+				}
+				for _, block := range internalRanges {
+					if block.Contains(ip) {
+						return errors.WithStack(ErrInternalResolution)
+					}
+				}
+			}
+
+			return nil
 		},
 	}
 }

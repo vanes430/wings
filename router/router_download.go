@@ -10,9 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/pterodactyl/wings/router/middleware"
-	"github.com/pterodactyl/wings/router/tokens"
-	"github.com/pterodactyl/wings/server/backup"
+	"vanes430/wings/router/middleware"
+	"vanes430/wings/router/tokens"
+	"vanes430/wings/server/backup"
 )
 
 // Handle a download request for a server backup.

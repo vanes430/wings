@@ -12,19 +12,20 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"emperror.dev/errors"
 	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/pterodactyl/wings/config"
-	"github.com/pterodactyl/wings/internal/models"
-	"github.com/pterodactyl/wings/router/downloader"
-	"github.com/pterodactyl/wings/router/middleware"
-	"github.com/pterodactyl/wings/router/tokens"
-	"github.com/pterodactyl/wings/server"
-	"github.com/pterodactyl/wings/server/filesystem"
+	"vanes430/wings/config"
+	"vanes430/wings/internal/models"
+	"vanes430/wings/router/downloader"
+	"vanes430/wings/router/middleware"
+	"vanes430/wings/router/tokens"
+	"vanes430/wings/server"
+	"vanes430/wings/server/filesystem"
 )
 
 // getServerFileContents returns the contents of a file on the server.
@@ -460,19 +461,60 @@ func postServerDecompressFiles(c *gin.Context) {
 	}
 
 	lg.Info("starting file decompression")
-	if err := s.Filesystem().DecompressFile(context.Background(), data.RootPath, data.File); err != nil {
-		// If the file is busy for some reason just return a nicer error to the user since there is not
-		// much we specifically can do. They'll need to stop the running server process in order to overwrite
-		// a file like this.
-		if strings.Contains(err.Error(), "text file busy") {
-			lg.WithField("error", errors.WithStackIf(err)).Warn("failed to decompress file: text file busy")
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": "One or more files this archive is attempting to overwrite are currently in use by another process. Please try again.",
+
+	// Get file stats to check size
+	st, err := s.Filesystem().Stat(data.File)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to stat file for decompression."})
+		return
+	}
+
+	// Create a channel to track completion
+	done := make(chan error, 1)
+	ctx := context.Background() // Use a background context so it doesn't die with the request
+
+	go func() {
+		done <- s.Filesystem().DecompressFile(ctx, data.RootPath, data.File)
+	}()
+
+	// If file is > 500MB, wait at most 5 seconds before backgrounding
+	if st.Size() > 500*1024*1024 {
+		select {
+		case err := <-done:
+			if err != nil {
+				if strings.Contains(err.Error(), "text file busy") {
+					lg.WithField("error", errors.WithStackIf(err)).Warn("failed to decompress file: text file busy")
+					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+						"error": "One or more files this archive is attempting to overwrite are currently in use by another process. Please try again.",
+					})
+					return
+				}
+				middleware.CaptureAndAbort(c, err)
+				return
+			}
+		case <-time.After(5 * time.Second):
+			// If 5 seconds passed and it's > 500MB, just return success and let it run in background
+			lg.Info("decompression taking longer than 5s for large file, moving to background")
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "File berukuran besar sedang diekstrak di latar belakang. Silakan lanjutkan aktivitas Anda.",
 			})
 			return
 		}
-		middleware.CaptureAndAbort(c, err)
-		return
+	} else {
+		// For files <= 500MB, wait normally
+		err := <-done
+		if err != nil {
+			if strings.Contains(err.Error(), "text file busy") {
+				lg.WithField("error", errors.WithStackIf(err)).Warn("failed to decompress file: text file busy")
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+					"error": "One or more files this archive is attempting to overwrite are currently in use by another process. Please try again.",
+				})
+				return
+			}
+			middleware.CaptureAndAbort(c, err)
+			return
+		}
 	}
 	c.Status(http.StatusNoContent)
 }
