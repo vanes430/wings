@@ -1,3 +1,17 @@
+> [!IMPORTANT]
+> This build officially supports **linux/amd64** only.
+>
+> **Quick Installation**
+> 1. Follow the [Official Installation Guide](https://pterodactyl.io/wings/1.0/installing.html).
+> 2. Once the initial setup is complete, execute the following commands to use this custom build:
+>
+> ```bash
+> systemctl stop wings
+> curl -L -o /usr/local/bin/wings "https://github.com/vanes430/wings/releases/download/latest/wings"
+> chmod u+x /usr/local/bin/wings
+> systemctl start wings
+> ```
+
 [![Logo Image](https://cdn.pterodactyl.io/logos/new/pterodactyl_logo.png)](https://pterodactyl.io)
 
 ![Discord](https://img.shields.io/discord/122900397965705216?label=Discord&logo=Discord&logoColor=white)
