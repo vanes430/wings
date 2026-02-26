@@ -463,7 +463,7 @@ func postServerDecompressFiles(c *gin.Context) {
 	lg.Info("starting file decompression")
 
 	// Get file stats to check size
-	st, err := s.Filesystem().Stat(data.File)
+	st, err := s.Filesystem().Stat(path.Join(data.RootPath, data.File))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to stat file for decompression."})
 		return
